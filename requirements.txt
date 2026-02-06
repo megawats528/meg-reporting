@@ -1,0 +1,10 @@
+pandas==2.2.2
+sentence-transformers==2.2.2
+bertopic[all]==0.15.0
+umap-learn==0.5.4
+hdbscan==0.8.30
+tqdm==4.65.0
+openai==1.0.0
+slack-sdk==3.22.0
+markdown2==2.4.0
+python-dotenv==1.0.0
