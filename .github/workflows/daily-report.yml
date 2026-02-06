@@ -1,0 +1,48 @@
+name: Daily Chat Report
+on:
+schedule:
+- cron: '0 10 * * *' # every day at 10:00 UTC (adjust as needed)
+workflow_dispatch: {}
+
+
+jobs:
+run:
+runs-on: ubuntu-latest
+steps:
+- uses: actions/checkout@v4
+- name: Set up Python
+uses: actions/setup-python@v4
+with:
+python-version: '3.10'
+- name: Install system deps
+run: |
+sudo apt-get update && sudo apt-get install -y build-essential libsndfile1
+- name: Install python deps
+run: |
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+- name: Create input/output dirs
+run: mkdir -p input output
+- name: Fetch traces (optional)
+env:
+UNITY_API_TOKEN: ${{ secrets.UNITY_API_TOKEN }}
+UNITY_API_URL: ${{ secrets.UNITY_API_URL }}
+run: |
+if [ -n "${UNITY_API_TOKEN}" ] && [ -n "${UNITY_API_URL}" ]; then
+echo "Fetching traces from UNITY_API_URL"
+curl -H "Authorization: Bearer ${UNITY_API_TOKEN}" "${UNITY_API_URL}" -o input/traces.json || true
+else
+echo "No UNITY_API_TOKEN/URL configured — expecting traces in input/ or use manual upload."
+fi
+- name: Run daily report
+env:
+OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+run: |
+python daily_chat_report.py
+- name: Upload artifact
+uses: actions/upload-artifact@v4
+with:
+name: daily-report
+path: output/
